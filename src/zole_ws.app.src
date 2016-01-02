@@ -1,0 +1,20 @@
+{application, zole_ws,
+ [{description, "Zole WS server"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {mod, {zole_ws_app, []}},
+  {applications,
+   [kernel,
+    stdlib,
+    crypto,
+    ranch,
+    cowlib,
+    cowboy,
+    zole
+   ]},
+  {env,[{port,8080}]},
+  {modules, [zole_ws_app,zole_ws_sup,zole_ws_handler]},
+  {contributors, []},
+  {licenses, []},
+  {links, []}
+ ]}.
