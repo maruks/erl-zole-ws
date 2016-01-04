@@ -1,114 +1,141 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Zole Websocket client</title>
-    <script src="/static/jquery.min.js"></script>
-    <script type="text/javascript">
-
-      var websocket;
-      $(document).ready(init);
-
-      function init() {
-          $('#server').val("ws://" + window.location.host + "/websocket");
-          if(!("WebSocket" in window)){
-              $('#status').append('<p><span style="color: red;">websockets are not supported </span></p>');
-              $("#navigation").hide();
-          } else {
-              $('#status').append('<p><span style="color: green;">websockets are supported </span></p>');
-              connect();
-          };
-              $("#connected").hide();
-              $("#content").hide();
-      };
-
-      function connect()
-      {
-          wsHost = $("#server").val()
-          websocket = new WebSocket(wsHost);
-          showScreen('<b>Connecting to: ' +  wsHost + '</b>');
-          websocket.onopen = function(evt) { onOpen(evt) };
-          websocket.onclose = function(evt) { onClose(evt) };
-          websocket.onmessage = function(evt) { onMessage(evt) };
-          websocket.onerror = function(evt) { onError(evt) };
-      };
-
-      function disconnect() {
-          websocket.close();
-      };
-
-      function toggle_connection(){
-          if(websocket.readyState == websocket.OPEN){
-              disconnect();
-          } else {
-              connect();
-          };
-      };
-
-      function sendTxt() {
-          if(websocket.readyState == websocket.OPEN){
-              txt = $("#send_txt").val();
-              websocket.send(txt);
-              showScreen('sending: ' + txt);
-          } else {
-               showScreen('websocket is not connected');
-          };
-      };
-
-      function onOpen(evt) {
-          showScreen('<span style="color: green;">CONNECTED </span>');
-          $("#connected").fadeIn('slow');
-          $("#content").fadeIn('slow');
-      };
-
-      function onClose(evt) {
-          showScreen('<span style="color: red;">DISCONNECTED </span>');
-      };
-
-      function onMessage(evt) {
-        showScreen('<span style="color: blue;">RESPONSE: ' + evt.data+ '</span>');
-        console.log(JSON.parse(evt.data));
-      };
-
-      function onError(evt) {
-          showScreen('<span style="color: red;">ERROR: ' + evt.data+ '</span>');
-      };
-
-      function showScreen(txt) {
-          $('#output').prepend('<p>' + txt + '</p>');
-      };
-
-      function clearScreen()
-      {
-          $('#output').html("");
-      };
-    </script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <style>
+      .margin-top-05 { margin-top: 0.5em;}
+      .margin-top-10 { margin-top: 1.0em; }
+      .margin-top-15 { margin-top: 1.5em; }
+      .margin-top-20 { margin-top: 2.0em; }
+    </style>
   </head>
 
   <body>
-    <div id="header">
-      <h1>Zole Websocket client</h1>
-      <div id="status"></div>
-    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <script src="/static/zole.js"></script>
 
+    <h1>Zole Websocket client</h1>
 
-    <div id="navigation">
+    <div class="container-fluid">
 
-      <p id="connecting">
-	<input type='text' id="server" value=""></input>
-	<button type="button" onclick="toggle_connection()">connection</button>
-      </p>
-      <div id="connected">
-	<p>
-	  <input type='text' id="send_txt" value=></input>
-	  <button type="button" onclick="sendTxt();">send</button>
-	</p>
+      <div class="row">
+	<div class="col-md-4" id="status"></div>
+	<div class="col-md-4"></div>
+	<div class="col-md-4"></div>
       </div>
 
-      <div id="content">
-	<button id="clear" onclick="clearScreen()" >Clear text</button>
-	<div id="output"></div>
+      <div class="row">
+	<div class="col-md-6">
+	  <form class="form-inline">
+	    <div class="form-group">
+	      <label for="server">URL</label>
+	      <input type="text" id="server" size="40" class="form-control">
+	    </div>
+	    <button type="button" class="btn btn-warning" onclick="toggle_connection()">Toggle connection</button>
+	  </form>
+	</div>
       </div>
 
+      <div class="row margin-top-05">
+	<div class="col-md-6">
+	  	  <form class="form-inline">
+	    <div class="form-group">
+	      <label for="username">Username</label>
+	      <input type="text" id="username" class="form-control">
+	    </div>
+	    <button type="button" class="btn btn-default" onclick="login()">Login</button>
+    	    <button type="button" class="btn btn-default" onclick="logout()">Logout</button>
+	  </form>
+	</div>
+	<div class="col-md-6">
+	</div>
+      </div>
+
+      <div class="row margin-top-05">
+	<div class="col-md-6">
+	  <form class="form-inline">
+	    <div class="form-group">
+	      <label for="tablename">Table name</label>
+	      <input type="text" id="tablename" class="form-control">
+	    </div>
+	    <button type="button" class="btn btn-default" onclick="login()">Join or create</button>
+	  </form>
+	</div>
+      </div>
+
+      <div class="row margin-top-20">
+	<div class="col-md-6">
+	  <form class="form-inline">
+	    <button type="button" class="btn btn-default" onclick="login()">Lielais</button>
+	    <button type="button" class="btn btn-default" onclick="login()">Zole</button>
+	    <button type="button" class="btn btn-default" onclick="login()">Pass</button>
+	  </form>
+	</div>
+      </div>
+
+      <div class="row margin-top-05">
+	<div class="col-md-6">
+	  <form class="form-inline">
+	    <div class="form-group">
+	      <label for="tablename">Two cards</label>
+	      <input type="text" id="two_cards" class="form-control">
+	    </div>
+	    <button type="button" class="btn btn-default" onclick="save()">Save</button>
+	  </form>
+	</div>
+      </div>
+
+      <div class="row margin-top-05">
+	<div class="col-md-6">
+	  <form class="form-inline">
+	    <div class="form-group">
+	      <label for="card">Card</label>
+	      <input type="text" id="card" class="form-control">
+	    </div>
+	    <button type="button" class="btn btn-default" onclick="play()">Play</button>
+	  </form>
+	</div>
+      </div>
+
+      <div class="row margin-top-05">
+	<div class="col-md-6">
+	  <form class="form-inline">
+	    <button type="button" class="btn btn-default" onclick="last_game()">Last game</button>
+	  </form>
+	</div>
+      </div>
+
+
+      <div class="row margin-top-20">
+	<div class="col-md-4" id="connected">
+	  <p>
+	    <input type='text' id="send_txt" value=></input>
+	    <button type="button" onclick="sendTxt();">send</button>
+	  </p>
+	</div>
+	<div class="col-md-4"></div>
+	<div class="col-md-4"></div>
+      </div>
+
+      <div class="row">
+	<div class="col-md-4" id="content">
+  	  <button id="clear" onclick="clearScreen()" >Clear text</button>
+	</div>
+	<div class="col-md-4"></div>
+	<div class="col-md-4"></div>
+      </div>
+
+      <div class="row">
+	<div class="col-md-10" id="output">
+	</div>
+	<div class="col-md-1"></div>
+	<div class="col-md-1"></div>
+      </div>
     </div>
   </body>
 </html>
