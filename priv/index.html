@@ -63,7 +63,8 @@
 	      <label for="tablename">Table name</label>
 	      <input type="text" id="tablename" class="form-control">
 	    </div>
-	    <button type="button" class="btn btn-default" onclick="login()">Join or create</button>
+	    <button type="button" class="btn btn-default" onclick="join()">Join or create</button>
+	    <button type="button" class="btn btn-default" onclick="leave()">Leave</button>
 	  </form>
 	</div>
       </div>
@@ -71,9 +72,9 @@
       <div class="row margin-top-20">
 	<div class="col-md-6">
 	  <form class="form-inline">
-	    <button type="button" class="btn btn-default" onclick="login()">Lielais</button>
-	    <button type="button" class="btn btn-default" onclick="login()">Zole</button>
-	    <button type="button" class="btn btn-default" onclick="login()">Pass</button>
+	    <button type="button" class="btn btn-default" onclick="lielais()">Lielais</button>
+	    <button type="button" class="btn btn-default" onclick="zole()">Zole</button>
+	    <button type="button" class="btn btn-default" onclick="pass()">Pass</button>
 	  </form>
 	</div>
       </div>
@@ -105,11 +106,10 @@
       <div class="row margin-top-05">
 	<div class="col-md-6">
 	  <form class="form-inline">
-	    <button type="button" class="btn btn-default" onclick="last_game()">Last game</button>
+	    <button type="button" class="btn btn-default" onclick="lastGame()">Last game</button>
 	  </form>
 	</div>
       </div>
-
 
       <div class="row margin-top-20">
 	<div class="col-md-4" id="connected">
