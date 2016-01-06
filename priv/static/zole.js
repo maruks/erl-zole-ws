@@ -1,6 +1,10 @@
 var websocket;
 $(document).ready(init);
 
+String.prototype.isEmpty = function() {
+    return (this.length === 0 || !this.trim());
+};
+
 function init() {
     $('#server').val("ws://" + window.location.host + "/websocket");
     if(!("WebSocket" in window)){
@@ -36,9 +40,8 @@ function toggle_connection(){
     };
 };
 
-function sendTxt() {
+function sendTxt(txt) {
     if(websocket.readyState == websocket.OPEN){
-        txt = $("#send_txt").val();
         websocket.send(txt);
         showScreen('sending: ' + txt);
     } else {
@@ -72,4 +75,38 @@ function showScreen(txt) {
 function clearScreen()
 {
     $('#output').html("");
+};
+
+function login() {
+    txt = $("#username").val();
+    if (!txt.isEmpty()) {
+	sendTxt(JSON.stringify(["login", txt]));
+    }
+};
+
+function join() {
+    txt = $("#tablename").val();
+    if (!txt.isEmpty()) {
+	sendTxt(JSON.stringify(["join", txt]));
+    }
+};
+
+function play() {
+    txt = $("#card").val();
+    if (!txt.isEmpty()) {
+	sendTxt(JSON.stringify(["play", JSON.parse(txt)]));
+    }
+};
+
+function save() {
+    txt = $("#two_cards").val();
+    if (!txt.isEmpty()) {
+	sendTxt(JSON.stringify(["save", JSON.parse(txt)]));
+    }
+};
+
+function send(cmd) {
+    if (!cmd.isEmpty()) {
+	sendTxt(JSON.stringify([cmd]));
+    }
 };

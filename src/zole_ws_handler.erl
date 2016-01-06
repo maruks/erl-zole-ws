@@ -34,7 +34,9 @@ websocket_info(Msg, Req, State) ->
         lager:info("WS info ~p ~n",[Msg]),
 %	erlang:start_timer(1000, self(), <<"How' you doin'?", State/binary>>),
 %	{reply, {text, Msg}, Req, State};
-    {reply, {text, jsx:encode(transform(Msg))}, Req, State}.
+     X = transform(Msg),
+    lager:info("X = ~p~n ",[X]),
+    {reply, {text, jsx:encode(X)}, Req, State}.
 
 websocket_terminate(Reason, _Req, State) ->
         io:format("WS TERMINATE ~p ~p~n",[Reason, State]),
@@ -58,11 +60,11 @@ handle([<<"logout">>], {logged_in} = S) ->
 handle([<<"join">>, N], {logged_in} = S) ->
     TableName = binary_to_list(N),
     R = table_sup:join_or_create(TableName, true),
-    NewState = case R of
-		   {ok, Pid} -> {joined, Pid};
-		   _ -> S
+    {Resp, NewState} = case R of
+		   {ok, Pid} -> {{ok}, {joined, Pid}};
+		   E -> {E, S}
 	       end,
-    {response(R, join), NewState};
+    {response(Resp, join), NewState};
 handle([<<"leave">>], {joined, TablePid} = S) ->
     R = table_sup:leave(TablePid),
     NewState = case R of
@@ -82,37 +84,34 @@ handle([<<"pass">>], {joined, TablePid} = S) ->
 handle([<<"last_game">>], {joined, TablePid} = S) ->
     R = table_sup:last_game(TablePid),
     {response(R, last_game), S};
-handle([<<"play">>, Card], {joined, TablePid} = S) ->
-    Cs = (catch decode_card(Card)),
+handle([<<"play">>, Crd], {joined, TablePid} = S) ->
+    Cs = (catch decode_card(Crd)),
     case Cs of
 	{'EXIT', _} ->
-	    {response({error, illegal_card}, save), S};
+	    {response({error, illegal_card}, play), S};
 	Card ->
-	    R = table_sup:play(Card, TablePid),
+	    lager:info("Playing ~p~n",[Card]),
+	    R = table_sup:play(TablePid, Card),
 	    {response(R, play), S}
     end;
 handle([<<"save">>, Cds], {joined, TablePid} = S) ->
     Cs = (catch lists:map(fun decode_card/1, Cds)),
     case Cs of
 	{'EXIT', _} ->
+	    lager:error("Illegal card ~p~n", Cds),
 	    {response({error, illegal_card}, save), S};
 	Cards ->
-	    R = table_sup:save(Cards, TablePid),
+	    lager:info("Save ~p~n", [Cards]),
+	    R = table_sup:save(TablePid, Cards),
 	    {response(R, save), S}
     end;
 handle(_, S) ->
     {{error, illegal_state}, S}.
 
 decode_card(Binary) when is_binary(Binary) ->
-    list_to_existing_atom(binary_to_list(Binary));
-decode_card([R,<<"7">>]) ->
-    {decode_card(R), 7};
-decode_card([R,<<"8">>]) ->
-    {decode_card(R), 8};
-decode_card([R,<<"9">>]) ->
-    {decode_card(R), 9};
-decode_card([R,<<"10">>]) ->
-    {decode_card(R), 10};
+    list_to_atom(binary_to_list(Binary));
+decode_card([N, S]) when is_integer(N) ->
+    {N, decode_card(S)};
 decode_card([R, S]) ->
     {decode_card(R), decode_card(S)}.
 
@@ -122,8 +121,10 @@ response({error, Msg}, Return) ->
     {error, Msg, Return}.
 
 transform(Tuple) when is_tuple(Tuple) ->
-    lists:map(fun zole_ws_handler:transform/1, tuple_to_list(Tuple));
+    transform(tuple_to_list(Tuple));
 transform(Map) when is_map(Map) ->
     transform(maps:to_list(Map));
+transform(List) when is_list(List) ->
+    lists:map(fun zole_ws_handler:transform/1, List);
 transform(X) ->
     X.
