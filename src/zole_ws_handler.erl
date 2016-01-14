@@ -1,4 +1,5 @@
 -module(zole_ws_handler).
+-define(PROMPT_REPEAT,10000).
 -import(lists,[delete/2,nth/2,split/2,sort/2,map/2,nth/2,zip/2,member/2,reverse/1,foreach/2,all/2]).
 -import(maps,[get/2,put/3,from_list/1,to_list/1,is_key/2,keys/1,get/3,update/3]).
 
@@ -29,13 +30,26 @@ websocket_handle(Data, Req, State) ->
     lager:info("WS handle ~p ~p ~n",[ Data, State]),
     {ok, Req, State}.
 
+websocket_info({timer, Msg, Ref}, Req, {joined, Pid, true, N, Ref}) ->
+    lager:info("WS timer ~p ~p ~n",[Msg, N]),
+    timer:send_after(?PROMPT_REPEAT, {timer, Msg, Ref}),
+    {reply, {text, jsx:encode(transform(Msg))}, Req, {joined, Pid, true, N + 1, Ref}};
+websocket_info({timer, _, _}, Req, S) ->
+    {ok, Req, S};
 websocket_info(Msg, Req, State) ->
     lager:info("WS info ~p ~n",[Msg]),
-    {reply, {text, jsx:encode(transform(Msg))}, Req, State}.
+    {reply, {text, jsx:encode(transform(Msg))}, Req, waiting_state(Msg, State)}.
 
 websocket_terminate(Reason, _Req, State) ->
         lager:info("WS TERMINATE ~p ~p~n",[Reason, State]),
 	ok.
+
+waiting_state({prompt, _} = Msg, {joined, Pid, _, _, _}) ->
+    Ref = make_ref(),
+    timer:send_after(?PROMPT_REPEAT, {timer, Msg, Ref}),
+    {joined, Pid, true, 0, Ref};
+waiting_state(_, S) ->
+    S.
 
 handle([<<"login">>, N], {} = S) ->
     Name = binary_to_list(N),
@@ -56,33 +70,33 @@ handle([<<"join">>, N], {logged_in} = S) ->
     TableName = binary_to_list(N),
     R = table_sup:join_or_create(TableName, true),
     {Resp, NewState} = case R of
-		   {ok, Pid} -> {{ok}, {joined, Pid}};
+		   {ok, Pid} -> {{ok}, {joined, Pid, false, 0, empty}};
 		   E -> {E, S}
 	       end,
     {response(Resp, join), NewState};
-handle([<<"leave">>], {joined, TablePid} = S) ->
+handle([<<"leave">>], {joined, TablePid, _, _, _} = S) ->
     R = table_sup:leave(TablePid),
     NewState = case R of
 		   {ok} -> {logged_in};
 		   _ -> S
 	       end,
     {response(R, leave), NewState};
-handle([<<"lielais">>], {joined, TablePid} = S) ->
+handle([<<"lielais">>], {joined, TablePid, _, _, _} = S) ->
     R = table_sup:lielais(TablePid),
-    {response(R, lielais), S};
-handle([<<"zole">>], {joined, TablePid} = S) ->
+    {response(R, lielais), new_state(R, S)};
+handle([<<"zole">>], {joined, TablePid, _, _, _} = S) ->
     R = table_sup:zole(TablePid),
-    {response(R, zole), S};
-handle([<<"pass">>], {joined, TablePid} = S) ->
+    {response(R, zole), new_state(R, S)};
+handle([<<"pass">>], {joined, TablePid, _, _, _} = S) ->
     R = table_sup:pass(TablePid),
-    {response(R, pass), S};
-handle([<<"last_game">>], {joined, TablePid} = S) ->
+    {response(R, pass), new_state(R, S)};
+handle([<<"last_game">>], {joined, TablePid, _, _, _} = S) ->
     R = table_sup:last_game(TablePid),
     {response(R, last_game), S};
 handle([<<"tables">>], S) ->
     spawn(?MODULE, get_tables, [self()]),
     {response({ok}, tables), S};
-handle([<<"play">>, Crd], {joined, TablePid} = S) ->
+handle([<<"play">>, Crd], {joined, TablePid, _, _, _} = S) ->
     Cs = (catch decode_card(Crd)),
     case Cs of
 	{'EXIT', _} ->
@@ -90,9 +104,9 @@ handle([<<"play">>, Crd], {joined, TablePid} = S) ->
 	Card ->
 	    lager:info("Playing ~p~n",[Card]),
 	    R = table_sup:play(TablePid, Card),
-	    {response(R, play), S}
+	    {response(R, play), new_state(R, S)}
     end;
-handle([<<"save">>, Cds], {joined, TablePid} = S) ->
+handle([<<"save">>, Cds], {joined, TablePid, _, _, _} = S) ->
     Cs = (catch lists:map(fun decode_card/1, Cds)),
     case Cs of
 	{'EXIT', _} ->
@@ -101,10 +115,16 @@ handle([<<"save">>, Cds], {joined, TablePid} = S) ->
 	Cards ->
 	    lager:info("Save ~p~n", [Cards]),
 	    R = table_sup:save(TablePid, Cards),
-	    {response(R, save), S}
+	    {response(R, save), new_state(R, S)}
     end;
 handle(_, S) ->
     {{error, illegal_state}, S}.
+
+
+new_state({ok}, {joined, TablePid, _, _}) ->
+    {joined, TablePid, false, 0, empty};
+new_state(_, S) ->
+    S.
 
 get_tables(Pid) ->
     {ok, Tables} = admin:list_avail_tables(),
