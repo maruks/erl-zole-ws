@@ -17,8 +17,7 @@ function init() {
     $("#content").hide();
 };
 
-function connect()
-{
+function connect() {
     wsHost = $("#server").val()
     websocket = new WebSocket(wsHost);
     showScreen('<b>Connecting to: ' +  wsHost + '</b>');
@@ -72,10 +71,16 @@ function showScreen(txt) {
     $('#output').prepend('<p>' + txt + '</p>');
 };
 
-function clearScreen()
-{
+function clearScreen() {
     $('#output').html("");
 };
+
+function quickStart() {
+    $("#username").val("player-" + uuid());
+    $("#tablename").val("pvb-table-" + uuid());
+    login();
+    setTimeout(join, 500);
+}
 
 function login() {
     txt = $("#username").val();
@@ -110,3 +115,13 @@ function send(cmd) {
 	sendTxt(JSON.stringify([cmd]));
     }
 };
+
+function uuid() {
+    var d = new Date().getTime();
+    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c) {
+        var r = (d + Math.random()*16)%16 | 0;
+        d = Math.floor(d/16);
+        return (c=='x' ? r : (r&0x7|0x8)).toString(16);
+    });
+    return uuid.toUpperCase();
+}

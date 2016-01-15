@@ -30,38 +30,37 @@
       </div>
 
       <div class="row">
-	<div class="col-md-6">
+	<div class="col-md-12">
 	  <form class="form-inline">
 	    <div class="form-group">
 	      <label for="server">URL</label>
 	      <input type="text" id="server" size="40" class="form-control">
 	    </div>
 	    <button type="button" class="btn btn-warning" onclick="toggle_connection()">Toggle connection</button>
+	    <button type="button" class="btn btn-primary" onclick="quickStart()">Quick Start</button>
 	  </form>
 	</div>
       </div>
 
       <div class="row margin-top-05">
-	<div class="col-md-6">
+	<div class="col-md-12">
 	  	  <form class="form-inline">
 	    <div class="form-group">
 	      <label for="username">Username</label>
-	      <input type="text" id="username" class="form-control">
+	      <input type="text" id="username" size="70" class="form-control">
 	    </div>
 	    <button type="button" class="btn btn-default" onclick="login()">Login</button>
     	    <button type="button" class="btn btn-default" onclick="send('logout')">Logout</button>
 	  </form>
 	</div>
-	<div class="col-md-6">
-	</div>
       </div>
 
       <div class="row margin-top-05">
-	<div class="col-md-6">
+	<div class="col-md-12">
 	  <form class="form-inline">
 	    <div class="form-group">
 	      <label for="tablename">Table name</label>
-	      <input type="text" id="tablename" class="form-control" placeholder="pvb-table-123">
+	      <input type="text" id="tablename" size="70" class="form-control" placeholder="pvb-table-123">
 	    </div>
 	    <button type="button" class="btn btn-default" onclick="join()">Join or create</button>
 	    <button type="button" class="btn btn-default" onclick="send('leave')">Leave</button>
@@ -71,7 +70,7 @@
       </div>
 
       <div class="row margin-top-20">
-	<div class="col-md-6">
+	<div class="col-md-12">
 	  <form class="form-inline">
 	    <button type="button" class="btn btn-default" onclick="send('lielais')">Lielais</button>
 	    <button type="button" class="btn btn-default" onclick="send('zole')">Zole</button>
@@ -81,7 +80,7 @@
       </div>
 
       <div class="row margin-top-05">
-	<div class="col-md-6">
+	<div class="col-md-12">
 	  <form class="form-inline">
 	    <div class="form-group">
 	      <label for="tablename">Two cards</label>
@@ -93,7 +92,7 @@
       </div>
 
       <div class="row margin-top-05">
-	<div class="col-md-6">
+	<div class="col-md-12">
 	  <form class="form-inline">
 	    <div class="form-group">
 	      <label for="card">Card</label>
@@ -105,7 +104,7 @@
       </div>
 
       <div class="row margin-top-05">
-	<div class="col-md-6">
+	<div class="col-md-12">
 	  <form class="form-inline">
 	    <button type="button" class="btn btn-default" onclick="send('last_game')">Last game</button>
 	  </form>
@@ -113,10 +112,7 @@
       </div>
 
       <div class="row margin-top-20">
-	<div class="col-md-10" id="output">
-	</div>
-	<div class="col-md-1"></div>
-	<div class="col-md-1"></div>
+	<div class="col-md-12" id="output"></div>
       </div>
     </div>
   </body>

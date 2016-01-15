@@ -36,6 +36,10 @@ websocket_info({timer, Msg, Ref}, Req, {joined, Pid, true, N, Ref}) ->
     {reply, {text, jsx:encode(transform(Msg))}, Req, {joined, Pid, true, N + 1, Ref}};
 websocket_info({timer, _, _}, Req, S) ->
     {ok, Req, S};
+websocket_info({end_of_game, GameNum, _, _, _, {Score, Points, TotalPoints}}, Req, State) ->
+    TricksWon = maps:map(fun( _,{T,_P}) -> T end, Score),
+    PointsWon = maps:map(fun( _,{_T,P}) -> P end, Score),
+    {reply, {text, jsx:encode(transform({end_of_game, GameNum, TricksWon, PointsWon, Points, TotalPoints}))}, Req, State};
 websocket_info(Msg, Req, State) ->
     lager:info("WS info ~p ~n",[Msg]),
     {reply, {text, jsx:encode(transform(Msg))}, Req, waiting_state(Msg, State)}.
