@@ -180,5 +180,5 @@ transform(List) when is_list(List) ->
 transform(X) ->
     X.
 
-set_log_level(level) ->
-    lager:set_loglevel(lager_file_backend, "zole-console.log", level).
+set_log_level(Level) ->
+    lager:set_loglevel(lager_file_backend, "zole-console.log", Level).
