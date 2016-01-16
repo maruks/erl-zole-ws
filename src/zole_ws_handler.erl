@@ -17,8 +17,8 @@ init({tcp, http}, _Req, _Opts) ->
 	{upgrade, protocol, cowboy_websocket}.
 
 websocket_init(_TransportName, Req, _Opts) ->
-        lager:info("WS INIT ~n",[]),
-	{ok, Req, {}}.
+    lager:info("WS INIT ~n",[]),
+    {ok, Req, {}}.
 
 websocket_handle({text, Msg}, Req, State) ->
     J = jsx:is_json(Msg),
@@ -44,9 +44,18 @@ websocket_info(Msg, Req, State) ->
     lager:info("WS info ~p ~n",[Msg]),
     {reply, {text, jsx:encode(transform(Msg))}, Req, waiting_state(Msg, State)}.
 
+websocket_terminate(Reason, _Req, {logged_in} = State) ->
+    R = admin:logout(),
+    lager:info("WS TERMINATE ~p ~p ~p~n",[Reason, State, R]),
+    ok;
+websocket_terminate(Reason, _Req, {joined, Pid, _, _, _} = State) ->
+    lager:info("WS TERMINATE ~p ~p~n",[Reason, State]),
+    table_sup:disconnect(Pid),
+    admin:logout(),
+    ok;
 websocket_terminate(Reason, _Req, State) ->
-        lager:info("WS TERMINATE ~p ~p~n",[Reason, State]),
-	ok.
+    lager:info("WS TERMINATE ~p ~p~n",[Reason, State]),
+    ok.
 
 waiting_state({prompt, _} = Msg, {joined, Pid, _, _, _}) ->
     Ref = make_ref(),
@@ -124,7 +133,6 @@ handle([<<"save">>, Cds], {joined, TablePid, _, _, _} = S) ->
 handle(_, S) ->
     {{error, illegal_state}, S}.
 
-
 new_state({ok}, {joined, TablePid, _, _}) ->
     {joined, TablePid, false, 0, empty};
 new_state(_, S) ->
@@ -132,7 +140,11 @@ new_state(_, S) ->
 
 get_tables(Pid) ->
     {ok, Tables} = admin:list_avail_tables(),
-    Pid ! {tables, Tables}.
+    Msg = case maps:size(Tables) of
+	      0 -> {tables};
+	      _ -> {tables, Tables}
+	  end,
+    Pid ! Msg.
 
 decode_card(Binary) when is_binary(Binary) ->
     list_to_atom(binary_to_list(Binary));
