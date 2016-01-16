@@ -1,6 +1,7 @@
 -module(zole_ws_handler).
--define(PROMPT_REPEAT,10000).
--define(CONN_TIMEOUT,60000).
+-define(PROMPT_REPEAT, 10000).
+-define(CONN_TIMEOUT, 200000).
+-define(PROMPT_TIMEOUT, 6).
 -import(lists,[delete/2,nth/2,split/2,sort/2,map/2,nth/2,zip/2,member/2,reverse/1,foreach/2,all/2]).
 -import(maps,[get/2,put/3,from_list/1,to_list/1,is_key/2,keys/1,get/3,update/3]).
 
@@ -31,10 +32,14 @@ websocket_handle(Data, Req, State) ->
     lager:info("WS handle ~p ~p ~n",[ Data, State]),
     {ok, Req, State}.
 
-websocket_info({timer, Msg, Ref}, Req, {joined, Pid, true, N, Ref}) ->
+websocket_info({timer, Msg, Ref}, Req, {joined, Pid, true, N, Ref} = S) ->
     lager:info("WS timer ~p ~p ~n",[Msg, N]),
     timer:send_after(?PROMPT_REPEAT, {timer, Msg, Ref}),
-    {reply, {text, jsx:encode(transform(Msg))}, Req, {joined, Pid, true, N + 1, Ref}};
+    if N > ?PROMPT_TIMEOUT ->
+	    {shutdown, Req, S};
+       true ->
+	    {reply, {text, jsx:encode(transform(Msg))}, Req, {joined, Pid, true, N + 1, Ref}}
+    end;
 websocket_info({timer, _, _}, Req, S) ->
     {ok, Req, S};
 websocket_info({table_closed, _ , _} = Msg, Req, _State) ->
@@ -136,7 +141,7 @@ handle([<<"save">>, Cds], {joined, TablePid, _, _, _} = S) ->
 handle(_, S) ->
     {{error, illegal_state}, S}.
 
-new_state({ok}, {joined, TablePid, _, _}) ->
+new_state({ok}, {joined, TablePid, _, _, _}) ->
     {joined, TablePid, false, 0, empty};
 new_state(_, S) ->
     S.
