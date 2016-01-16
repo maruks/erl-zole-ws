@@ -1,5 +1,6 @@
 -module(zole_ws_handler).
 -define(PROMPT_REPEAT,10000).
+-define(CONN_TIMEOUT,60000).
 -import(lists,[delete/2,nth/2,split/2,sort/2,map/2,nth/2,zip/2,member/2,reverse/1,foreach/2,all/2]).
 -import(maps,[get/2,put/3,from_list/1,to_list/1,is_key/2,keys/1,get/3,update/3]).
 
@@ -18,7 +19,7 @@ init({tcp, http}, _Req, _Opts) ->
 
 websocket_init(_TransportName, Req, _Opts) ->
     lager:info("WS INIT ~n",[]),
-    {ok, Req, {}}.
+    {ok, Req, {}, ?CONN_TIMEOUT}.
 
 websocket_handle({text, Msg}, Req, State) ->
     J = jsx:is_json(Msg),
