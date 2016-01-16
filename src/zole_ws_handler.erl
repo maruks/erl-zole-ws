@@ -12,6 +12,7 @@
 -export([websocket_handle/3]).
 -export([websocket_info/3]).
 -export([websocket_terminate/3]).
+-export([set_log_level/1]).
 
 -compile(export_all).
 
@@ -138,7 +139,8 @@ handle([<<"save">>, Cds], {joined, TablePid, _, _, _} = S) ->
 	    R = table_sup:save(TablePid, Cards),
 	    {response(R, save), new_state(R, S)}
     end;
-handle(_, S) ->
+handle(M, S) ->
+    lager:debug("illegal_state ~p ~p~n",[M, S]),
     {{error, illegal_state}, S}.
 
 new_state({ok}, {joined, TablePid, _, _, _}) ->
@@ -177,3 +179,6 @@ transform(List) when is_list(List) ->
     end;
 transform(X) ->
     X.
+
+set_log_level(level) ->
+    lager:set_loglevel(lager_file_backend, "zole-console.log", level).
