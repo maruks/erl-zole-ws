@@ -24,6 +24,7 @@ websocket_init(_TransportName, Req, _Opts) ->
     {ok, Req, {}, ?CONN_TIMEOUT}.
 
 websocket_handle({text, Msg}, Req, State) ->
+    lager:debug("HANDLE ~p~n",[Msg]),
     J = jsx:is_json(Msg),
     {Reply, NewState} = if J -> handle(jsx:decode(Msg), State);
 			   true -> {{error, invalid_json}, State}
@@ -74,6 +75,7 @@ waiting_state(_, S) ->
     S.
 
 handle([<<"login">>, N], {} = S) ->
+    lager:debug("LOGIN ~p~n",[N]),
     Name = binary_to_list(N),
     R = admin:login(Name),
     NewState = case R of
@@ -172,7 +174,7 @@ transform(Tuple) when is_tuple(Tuple) ->
     transform(tuple_to_list(Tuple));
 transform(Map) when is_map(Map) ->
     transform(to_list(Map));
-transform(List) when is_list(List) ->
+transform(List) when is_list(List), length(List) > 0 ->
     case all(fun erlang:is_integer/1, List) of
 	false -> map(fun zole_ws_handler:transform/1, List);
 	true -> list_to_binary(List)
