@@ -118,6 +118,7 @@ handle([<<"last_game">>], {joined, TablePid, _, _, _} = S) ->
     R = table_sup:last_game(TablePid),
     {response(R, last_game), S};
 handle([<<"tables">>], S) ->
+    admin:subscribe(self()),
     spawn(?MODULE, get_tables, [self()]),
     {response({ok}, tables), S};
 handle([<<"play">>, Crd], {joined, TablePid, _, _, _} = S) ->
