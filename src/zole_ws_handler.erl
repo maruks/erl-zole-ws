@@ -52,7 +52,13 @@ websocket_info({end_of_game, GameNum, _, _, _, {Score, Points, TotalPoints}}, Re
     {reply, {text, jsx:encode(transform({end_of_game, GameNum, TricksWon, PointsWon, Points, TotalPoints}))}, Req, State};
 websocket_info(Msg, Req, State) ->
     lager:info("WS info ~p ~n",[Msg]),
+    unsubscribe(Msg),
     {reply, {text, jsx:encode(transform(Msg))}, Req, waiting_state(Msg, State)}.
+
+unsubscribe({players,_}) ->
+    admin:unsubscribe(self());
+unsubscribe(_) ->
+    ok.
 
 websocket_terminate(Reason, _Req, {logged_in} = State) ->
     R = admin:logout(),
