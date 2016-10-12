@@ -1,5 +1,6 @@
 -module(zole_ws_handler).
 -define(PROMPT_REPEAT, 10000).
+-define(CLOSE_AFTER_LOGOUT, 333).
 -define(CONN_TIMEOUT, 200000).
 -define(PROMPT_TIMEOUT, 6).
 -import(lists,[delete/2,nth/2,split/2,sort/2,map/2,nth/2,zip/2,member/2,reverse/1,foreach/2,all/2]).
@@ -46,18 +47,20 @@ websocket_info({timer, _, _}, Req, S) ->
     {ok, Req, S};
 websocket_info({table_closed, _ , _} = Msg, Req, _State) ->
     {reply, {text, jsx:encode(transform(Msg))}, Req, {logged_in}};
+websocket_info({close_ws_conn}, Req, S) ->
+    {shutdown, Req, S};
 websocket_info({end_of_game, GameNum, _, _, _, {Score, Points, TotalPoints}}, Req, State) ->
     TricksWon = maps:map(fun( _,{T,_P}) -> T end, Score),
     PointsWon = maps:map(fun( _,{_T,P}) -> P end, Score),
     {reply, {text, jsx:encode(transform({end_of_game, GameNum, TricksWon, PointsWon, Points, TotalPoints}))}, Req, State};
 websocket_info(Msg, Req, State) ->
     lager:info("WS info ~p ~n",[Msg]),
-    unsubscribe(Msg),
+    unsubscribe_if_starting_new_game(Msg),
     {reply, {text, jsx:encode(transform(Msg))}, Req, waiting_state(Msg, State)}.
 
-unsubscribe({players,_}) ->
+unsubscribe_if_starting_new_game({players,_}) ->
     admin:unsubscribe(self());
-unsubscribe(_) ->
+unsubscribe_if_starting_new_game(_) ->
     ok.
 
 websocket_terminate(Reason, _Req, {logged_in} = State) ->
@@ -80,6 +83,11 @@ waiting_state({prompt, _} = Msg, {joined, Pid, _, _, _}) ->
 waiting_state(_, S) ->
     S.
 
+close_ws_if_logged_out({ok}) ->
+    timer:send_after(?CLOSE_AFTER_LOGOUT, {close_ws_conn});
+close_ws_if_logged_out(_) ->
+    ok.
+
 handle([<<"login">>, N], {} = S) ->
     lager:debug("LOGIN ~p~n",[N]),
     Name = binary_to_list(N),
@@ -91,6 +99,7 @@ handle([<<"login">>, N], {} = S) ->
     {response(R, login), NewState};
 handle([<<"logout">>], {logged_in} = S) ->
     R = admin:logout(),
+    close_ws_if_logged_out(R),
     NewState = case R of
 		   {ok} -> {};
 		   _ -> S
