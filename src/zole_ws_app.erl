@@ -20,7 +20,9 @@ start(_StartType, _StartArgs) ->
 		{'_', [
 			{"/", cowboy_static, {priv_file, zole_ws, "index.html"}},
 			{"/websocket", zole_ws_handler, []},
-			{"/static/[...]", cowboy_static, {priv_dir, zole_ws, "static"}}
+			{"/js/[...]", cowboy_static, {priv_dir, zole_ws, "js"}},
+			{"/css/[...]", cowboy_static, {priv_dir, zole_ws, "css"}},
+			{"/images/[...]", cowboy_static, {priv_dir, zole_ws, "images"}}
 		]}
 	]),
 	{ok, _} = cowboy:start_http(http, 100, [{port, PortNum}],

@@ -1,119 +1,49 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Zole Websocket client</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-    <style>
-      .margin-top-05 { margin-top: 0.5em;}
-      .margin-top-10 { margin-top: 1.0em; }
-      .margin-top-15 { margin-top: 1.5em; }
-      .margin-top-20 { margin-top: 2.0em; }
-    </style>
+    <link href="css/zole.min.css" rel="stylesheet" type="text/css">
+    <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <script src="js/zole.js"></script>
   </head>
-
   <body>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
-    <script src="/static/zole.js"></script>
 
-    <h1>Zole Websocket client</h1>
-
-    <div class="container-fluid">
-
-      <div class="row">
-	<div class="col-md-4" id="status"></div>
-	<div class="col-md-4"></div>
-	<div class="col-md-4"></div>
+    <div id="app">
+      <div id="preloaded-images">
+	<img src="images/10_of_clubs.png"/>
+	<img src="images/10_of_diamonds.png"/>
+	<img src="images/10_of_hearts.png"/>
+	<img src="images/10_of_spades.png"/>
+	<img src="images/7_of_diamonds.png"/>
+	<img src="images/8_of_diamonds.png"/>
+	<img src="images/9_of_clubs.png"/>
+	<img src="images/9_of_diamonds.png"/>
+	<img src="images/9_of_hearts.png"/>
+	<img src="images/9_of_spades.png"/>
+	<img src="images/ace_of_clubs.png"/>
+	<img src="images/ace_of_diamonds.png"/>
+	<img src="images/ace_of_hearts.png"/>
+	<img src="images/ace_of_spades.png"/>
+	<img src="images/jack_of_clubs.png"/>
+	<img src="images/jack_of_diamonds.png"/>
+	<img src="images/jack_of_hearts.png"/>
+	<img src="images/jack_of_spades.png"/>
+	<img src="images/king_of_clubs.png"/>
+	<img src="images/king_of_diamonds.png"/>
+	<img src="images/king_of_hearts.png"/>
+	<img src="images/king_of_spades.png"/>
+	<img src="images/queen_of_clubs.png"/>
+	<img src="images/queen_of_diamonds.png"/>
+	<img src="images/queen_of_hearts.png"/>
+	<img src="images/queen_of_spades.png"/>
       </div>
-
-      <div class="row">
-	<div class="col-md-12">
-	  <form class="form-inline">
-	    <div class="form-group">
-	      <label for="server">URL</label>
-	      <input type="text" id="server" size="40" class="form-control">
-	    </div>
-	    <button type="button" class="btn btn-warning" onclick="toggle_connection()">Toggle connection</button>
-	    <button type="button" class="btn btn-primary" onclick="quickStart()">Quick Start</button>
-	  </form>
-	</div>
-      </div>
-
-      <div class="row margin-top-05">
-	<div class="col-md-12">
-	  	  <form class="form-inline">
-	    <div class="form-group">
-	      <label for="username">Username</label>
-	      <input type="text" id="username" size="70" class="form-control">
-	    </div>
-	    <button type="button" class="btn btn-default" onclick="login()">Login</button>
-    	    <button type="button" class="btn btn-default" onclick="send('logout')">Logout</button>
-	  </form>
-	</div>
-      </div>
-
-      <div class="row margin-top-05">
-	<div class="col-md-12">
-	  <form class="form-inline">
-	    <div class="form-group">
-	      <label for="tablename">Table name</label>
-	      <input type="text" id="tablename" size="70" class="form-control" placeholder="pvb-table-123">
-	    </div>
-	    <button type="button" class="btn btn-default" onclick="join()">Join or create</button>
-	    <button type="button" class="btn btn-default" onclick="send('leave')">Leave</button>
-	    <button type="button" class="btn btn-default" onclick="send('tables')">Show tables</button>
-	  </form>
-	</div>
-      </div>
-
-      <div class="row margin-top-20">
-	<div class="col-md-12">
-	  <form class="form-inline">
-	    <button type="button" class="btn btn-default" onclick="send('lielais')">Lielais</button>
-	    <button type="button" class="btn btn-default" onclick="send('zole')">Zole</button>
-	    <button type="button" class="btn btn-default" onclick="send('pass')">Pass</button>
-	  </form>
-	</div>
-      </div>
-
-      <div class="row margin-top-05">
-	<div class="col-md-12">
-	  <form class="form-inline">
-	    <div class="form-group">
-	      <label for="tablename">Two cards</label>
-	      <input type="text" id="two_cards" class="form-control" size="40" placeholder='[["ace","clubs"], [10,"diamonds"] ]'>
-	    </div>
-	    <button type="button" class="btn btn-default" onclick="save()">Save</button>
-	  </form>
-	</div>
-      </div>
-
-      <div class="row margin-top-05">
-	<div class="col-md-12">
-	  <form class="form-inline">
-	    <div class="form-group">
-	      <label for="card">Card</label>
-	      <input type="text" id="card" class="form-control" placeholder='["ace","clubs"]' >
-	    </div>
-	    <button type="button" class="btn btn-default" onclick="play()">Play</button>
-	  </form>
-	</div>
-      </div>
-
-      <div class="row margin-top-05">
-	<div class="col-md-12">
-	  <form class="form-inline">
-	    <button type="button" class="btn btn-default" onclick="send('last_game')">Last game</button>
-	  </form>
-	</div>
-      </div>
-
-      <div class="row margin-top-20">
-	<div class="col-md-12" id="output"></div>
-      </div>
+      <h3>Loading Zole...</h3>
     </div>
+
+    <script>
+      zole.core.init();
+    </script>
+
   </body>
 </html>
