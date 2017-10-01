@@ -3,19 +3,14 @@
 -define(CLOSE_AFTER_LOGOUT, 333).
 -define(CONN_TIMEOUT, 200000).
 -define(PROMPT_TIMEOUT, 6).
--import(lists,[delete/2,nth/2,split/2,sort/2,map/2,nth/2,zip/2,member/2,reverse/1,foreach/2,all/2]).
+-import(lists,[delete/2,nth/2,split/2,sort/2,map/2,zip/2,member/2,reverse/1,foreach/2,all/2]).
 -import(maps,[get/2,put/3,from_list/1,to_list/1,is_key/2,keys/1,get/3,update/3]).
 
 -behaviour(cowboy_websocket_handler).
 
 -export([init/3]).
--export([websocket_init/3]).
--export([websocket_handle/3]).
--export([websocket_info/3]).
--export([websocket_terminate/3]).
--export([set_log_level/1]).
-
--compile(export_all).
+-export([websocket_init/3,websocket_handle/3,websocket_info/3,websocket_terminate/3]).
+-export([set_log_level/1,get_tables/1]).
 
 init({tcp, http}, _Req, _Opts) ->
 	{upgrade, protocol, cowboy_websocket}.
@@ -181,8 +176,8 @@ decode_card([N, S]) when is_integer(N) ->
 decode_card([R, S]) ->
     {decode_card(R), decode_card(S)}.
 
-response({ok}, Return) ->
-    {ok, Return};
+response({ok}, Return) when is_atom(Return) ->
+    {list_to_atom("ok_" ++ atom_to_list(Return))};
 response({error, Msg}, Return) ->
     {error, Msg, Return}.
 
@@ -192,7 +187,7 @@ transform(Map) when is_map(Map) ->
     transform(to_list(Map));
 transform(List) when is_list(List), length(List) > 0 ->
     case all(fun erlang:is_integer/1, List) of
-	false -> map(fun zole_ws_handler:transform/1, List);
+	false -> map(fun transform/1, List);
 	true -> list_to_binary(List)
     end;
 transform(X) ->
